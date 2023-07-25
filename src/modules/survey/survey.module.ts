@@ -4,9 +4,10 @@ import { SurveyResolver } from './survey.resolver';
 import { Survey } from './entities/survey.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UtilsProvider } from 'src/common/UtilsProvider';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Survey])],
-  providers: [SurveyResolver, SurveyService, UtilsProvider],
+  providers: [SurveyResolver, SurveyService, UtilsProvider, CloudinaryService],
 })
 export class SurveyModule {}

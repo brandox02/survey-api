@@ -9,6 +9,7 @@ import { NotFoundException } from 'src/common/GqlExeptions/NotFoundExeption';
 import { UpdateSurveyInput } from './dto/update-survey.input';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Paginate } from './dto/paginated-survey.input';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
 @Injectable()
 export class SurveyService {
@@ -16,9 +17,36 @@ export class SurveyService {
   constructor(
     @InjectRepository(Survey) private readonly repo: Repository<Survey>,
     private readonly utils: UtilsProvider,
+    private readonly cloudinaryService: CloudinaryService,
   ) {}
+
   async create(input: CreateSurveyInput): Promise<Survey> {
-    const survey = await this.repo.save(this.repo.create(input));
+    const mappedContent = await Promise.all(
+      (input.content as any as Array<any>).map(async (item) => {
+        if (item.type === 'imagepicker') {
+          const choices = await Promise.all(
+            item.choices.map(async (choice: any) => {
+              if (choice.base64Image) {
+                const { base64Image, ...restProps } = choice;
+                const { url, public_id } =
+                  await this.cloudinaryService.uploadImage(
+                    choice.base64Image,
+                    choice?.public_id,
+                  );
+                return { ...restProps, imageLink: url, public_id };
+              }
+              return choice;
+            }),
+          );
+          return { ...item, choices };
+        }
+        return item;
+      }),
+    );
+
+    const survey = await this.repo.save(
+      this.repo.create({ ...input, content: mappedContent }),
+    );
     return survey;
   }
 
