@@ -56,11 +56,11 @@ export class SurveyResolver {
     return this.service.update(input, context);
   }
 
-  @Query(() => ChartResponse)
+  @Query(() => [ChartResponse])
   async getCharts(
     @Args('where', { defaultValue: {} }) where: WhereSurveyInput,
     @Context() context: any,
-  ): Promise<ChartResponse> {
+  ): Promise<Array<ChartResponse>> {
     return this.service.getCharts(where, context);
   }
 }

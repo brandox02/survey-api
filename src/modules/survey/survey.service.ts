@@ -122,7 +122,7 @@ export class SurveyService {
   async getCharts(
     where: WhereSurveyInput = {},
     context: any,
-  ): Promise<ChartResponse> {
+  ): Promise<Array<ChartResponse>> {
     const copyWhere: any = { ...where };
 
     const question = await this.repo.findOne({
@@ -146,19 +146,15 @@ export class SurveyService {
       });
     });
 
-    const mappedExtracted: any = {
-      title: question.title,
-      items: Object.entries(temp)
-        .map(([key, value]) =>
-          Object.entries(value).map(([key2, value2]) => ({
-            label: (question.content as any)
-              .find((u) => u.name === key)
-              .choices.find((y) => y.value === key2).text,
-            count: value2,
-          })),
-        )
-        .flat(),
-    };
+    const mappedExtracted: any = Object.entries(temp).map(([key, value]) => ({
+      title: (question.content as any).find((g: any) => g.name === key).title,
+      items: Object.entries(value).map(([key2, value2]) => ({
+        label: (question.content as any)
+          .find((u) => u.name === key)
+          .choices.find((y: any) => y.value === key2).text,
+        count: value2,
+      })),
+    }));
 
     return mappedExtracted;
   }
