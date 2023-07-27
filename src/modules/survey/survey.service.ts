@@ -10,6 +10,7 @@ import { UpdateSurveyInput } from './dto/update-survey.input';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Paginate } from './dto/paginated-survey.input';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
+import { ChartResponse } from './dto/chart-survey.output';
 
 @Injectable()
 export class SurveyService {
@@ -116,5 +117,49 @@ export class SurveyService {
   async update(input: UpdateSurveyInput, context: any): Promise<Survey> {
     await this.repo.save(this.repo.create(input));
     return this.findOne({ id: input.id }, context);
+  }
+
+  async getCharts(
+    where: WhereSurveyInput = {},
+    context: any,
+  ): Promise<ChartResponse> {
+    const copyWhere: any = { ...where };
+
+    const question = await this.repo.findOne({
+      where: this.utils.removeNullFields(copyWhere),
+      relations: this.relations,
+      order: { createdAt: 'DESC' },
+    });
+
+    const temp = {};
+    question.answers.forEach((is) => {
+      Object.entries(is.content).forEach(([answerKey, answerItem]) => {
+        if (Array.isArray(answerItem)) {
+          answerItem.forEach((ld) => {
+            if (temp[answerKey]) {
+              temp[answerKey][ld] = (temp[answerKey][ld] || 0) + 1;
+            } else {
+              temp[answerKey] = { [ld]: 1 };
+            }
+          });
+        }
+      });
+    });
+
+    const mappedExtracted: any = {
+      title: question.title,
+      items: Object.entries(temp)
+        .map(([key, value]) =>
+          Object.entries(value).map(([key2, value2]) => ({
+            label: (question.content as any)
+              .find((u) => u.name === key)
+              .choices.find((y) => y.value === key2).text,
+            count: value2,
+          })),
+        )
+        .flat(),
+    };
+
+    return mappedExtracted;
   }
 }

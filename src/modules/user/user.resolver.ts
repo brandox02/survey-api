@@ -18,7 +18,6 @@ export class UserResolver {
 
   @Query(() => GetUserInfo)
   async getUserInfo(@Context() context: any): Promise<GetUserInfo> {
-    console.log({ context });
     const d: any = await this.service.findOne({ id: context.req.user.id });
     return d;
   }

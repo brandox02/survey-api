@@ -5,6 +5,7 @@ import { Paginate, PaginatedSurvey } from './dto/paginated-survey.input';
 import { UpdateSurveyInput } from './dto/update-survey.input';
 import { WhereSurveyInput } from './dto/where-survey.input';
 import { Survey } from './entities/survey.entity';
+import { ChartResponse } from './dto/chart-survey.output';
 
 @Resolver(() => Survey)
 export class SurveyResolver {
@@ -53,5 +54,13 @@ export class SurveyResolver {
     @Context() context: any,
   ): Promise<Survey> {
     return this.service.update(input, context);
+  }
+
+  @Query(() => ChartResponse)
+  async getCharts(
+    @Args('where', { defaultValue: {} }) where: WhereSurveyInput,
+    @Context() context: any,
+  ): Promise<ChartResponse> {
+    return this.service.getCharts(where, context);
   }
 }
