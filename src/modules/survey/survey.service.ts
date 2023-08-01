@@ -142,19 +142,39 @@ export class SurveyService {
               temp[answerKey] = { [ld]: 1 };
             }
           });
+        } else {
+          if (temp[answerKey]) {
+            temp[answerKey][answerItem] =
+              (temp[answerKey][answerItem] || 0) + 1;
+          } else {
+            temp[answerKey] = { [answerItem]: 1 };
+          }
         }
       });
     });
 
-    const mappedExtracted: any = Object.entries(temp).map(([key, value]) => ({
-      title: (question.content as any).find((g: any) => g.name === key).title,
-      items: Object.entries(value).map(([key2, value2]) => ({
-        label: (question.content as any)
-          .find((u) => u.name === key)
-          .choices.find((y: any) => y.value === key2).text,
-        count: value2,
-      })),
-    }));
+    const mappedExtracted: any = Object.entries(temp)
+      .filter(([key]) =>
+        ['imagepicker', 'checkbox', 'radiogroup', 'boolean'].includes(
+          (question.content as any).find((g: any) => g.name === key).type,
+        ),
+      )
+      .map(([key, value]) => {
+        const result = (question.content as any).find(
+          (u: any) => u.name === key,
+        );
+        return {
+          title: (question.content as any).find((g: any) => g.name === key)
+            .title,
+          items: Object.entries(value).map(([key2, value2]) => ({
+            label:
+              result?.choices?.find((y: any) => y.value === key2)?.text ||
+              (key2 === 'true' ? result.labelTrue : result.labelFalse),
+            // label: 'remix exclusivo',
+            count: value2,
+          })),
+        };
+      });
 
     return mappedExtracted;
   }
